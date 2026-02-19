@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 
 import com.gabrieudev.rateio.core.domain.User;
 import com.gabrieudev.rateio.core.domain.enums.AuthProvider;
+import com.gabrieudev.rateio.core.exceptions.InternalErrorException;
 import com.gabrieudev.rateio.core.exceptions.OAuth2AuthenticationProcessingException;
 import com.gabrieudev.rateio.core.port.incoming.OAuth2UserProcessor;
 import com.gabrieudev.rateio.core.port.outgoing.OAuth2UserInfoFactoryPort;
@@ -63,12 +64,12 @@ public class OAuth2UserProcessorImpl implements OAuth2UserProcessor {
         user.setName(oAuth2UserInfo.getName());
         user.setEmail(oAuth2UserInfo.getEmail());
         user.setImageUrl(oAuth2UserInfo.getImageUrl());
-        return userRepository.save(user);
+        return userRepository.save(user).orElseThrow(() -> new InternalErrorException("Failed to save user"));
     }
 
     private User updateExistingUser(User existingUser, OAuth2UserInfoPort oAuth2UserInfo) {
         existingUser.setName(oAuth2UserInfo.getName());
         existingUser.setImageUrl(oAuth2UserInfo.getImageUrl());
-        return userRepository.save(existingUser);
+        return userRepository.save(existingUser).orElseThrow(() -> new InternalErrorException("Failed to update user"));
     }
 }

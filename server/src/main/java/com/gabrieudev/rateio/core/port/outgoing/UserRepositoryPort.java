@@ -9,7 +9,7 @@ public interface UserRepositoryPort {
 
     boolean existsByEmail(String email);
 
-    User save(User user);
+    Optional<User> save(User user);
 
     Optional<User> findById(Long id);
 }

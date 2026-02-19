@@ -59,6 +59,6 @@ public class AuthenticationService implements AuthenticationUseCase {
         user.setProvider(AuthProvider.local);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        return userRepository.save(user);
+        return userRepository.save(user).orElseThrow(() -> new RuntimeException("Failed to register user"));
     }
 }
