@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/auth-context";
 import axiosInstance from "@/lib/axios";
+import axios from "axios";
 
 const formSchema = z.object({
   email: z.email("Invalid email address"),
@@ -46,12 +47,17 @@ export default function LoginForm() {
     try {
       const response = await login(data);
       authLogin(response.accessToken);
-      toast.success("You're successfully logged in!");
       router.push("/");
-    } catch (error: any) {
-      toast.error(
-        error?.message || "Oops! Something went wrong. Please try again!",
-      );
+    } catch (error: unknown) {
+      let message = "Oops! Algo deu errado. Por favor, tente novamente!";
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast.error(message);
     }
   };
 

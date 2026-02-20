@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
+import axios from "axios";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -28,10 +29,6 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SignupForm() {
   const router = useRouter();
 
-  const signup = async (signupRequest: SignupRequest): Promise<void> => {
-    await axiosInstance.post("/auth/signup", signupRequest);
-  };
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", email: "", password: "" },
@@ -39,15 +36,21 @@ export default function SignupForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await signup(data);
+      await axiosInstance.post("/auth/signup", data);
       toast.success(
-        "You're successfully registered. Please login to continue!",
+        "Você se registrou com sucesso! Por favor, faça login para continuar.",
       );
       router.push("/login");
-    } catch (error: any) {
-      toast.error(
-        error?.message || "Oops! Something went wrong. Please try again!",
-      );
+    } catch (error: unknown) {
+      let message = "Oops! Algo deu errado. Por favor, tente novamente!";
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast.error(message);
     }
   };
 

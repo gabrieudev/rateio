@@ -23,4 +23,9 @@ declare global {
     accessToken: string;
     tokenType: string;
   }
+
+  export interface ApiError {
+    message: string;
+    status?: number;
+  }
 }
