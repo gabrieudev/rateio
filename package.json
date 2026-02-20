@@ -10,5 +10,8 @@
   "scripts": {
     "dev": "concurrently -n SERVER,CLIENT -c blue,green \"npm --prefix apps/server run dev\" \"npm --prefix apps/client run dev\"",
     "build": "turbo run build"
-  }
+  },
+  "workspaces": [
+    "apps/*"
+  ]
 }
