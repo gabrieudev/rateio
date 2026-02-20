@@ -1,9 +1,12 @@
 package com.gabrieudev.rateio.infrastructure.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
     private final Auth auth = new Auth();
@@ -30,16 +33,15 @@ public class AppProperties {
         }
     }
 
-    public static final class OAuth2 {
+    public static class OAuth2 {
         private List<String> authorizedRedirectUris = new ArrayList<>();
 
         public List<String> getAuthorizedRedirectUris() {
             return authorizedRedirectUris;
         }
 
-        public OAuth2 authorizedRedirectUris(List<String> authorizedRedirectUris) {
+        public void setAuthorizedRedirectUris(List<String> authorizedRedirectUris) {
             this.authorizedRedirectUris = authorizedRedirectUris;
-            return this;
         }
     }
 

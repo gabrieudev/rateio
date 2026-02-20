@@ -1,122 +1,98 @@
 package com.gabrieudev.rateio.infrastructure.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.BeanIds;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.gabrieudev.rateio.core.port.outgoing.PasswordEncoderPort;
-import com.gabrieudev.rateio.core.port.outgoing.TokenServicePort;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.CustomUserDetailsService;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.RestAuthenticationEntryPoint;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.TokenAuthenticationFilter;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.oauth2.CustomOAuth2UserService;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.oauth2.OAuth2AuthenticationFailureHandler;
-import com.gabrieudev.rateio.infrastructure.adapter.inbound.security.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.gabrieudev.rateio.infrastructure.security.CustomUserDetailsService;
+import com.gabrieudev.rateio.infrastructure.security.RestAuthenticationEntryPoint;
+import com.gabrieudev.rateio.infrastructure.security.TokenAuthenticationFilter;
+import com.gabrieudev.rateio.infrastructure.security.oauth2.CustomOAuth2UserService;
+import com.gabrieudev.rateio.infrastructure.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.gabrieudev.rateio.infrastructure.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.gabrieudev.rateio.infrastructure.security.oauth2.OAuth2AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
-
-    @Autowired
-    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-
-    @Autowired
-    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-
-    @Autowired
-    private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-
-    @Autowired
-    private PasswordEncoderPort passwordEncoderPort;
-
-    // Necessário para injetar o TokenServicePort no filtro
-    @Autowired
-    private TokenServicePort tokenService;
-
-    @Bean
-    TokenAuthenticationFilter tokenAuthenticationFilter(TokenServicePort tokenService,
-            CustomUserDetailsService customUserDetailsService) {
-        return new TokenAuthenticationFilter(tokenService, customUserDetailsService);
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService,
+            CustomOAuth2UserService customOAuth2UserService,
+            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+            OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler,
+            HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+        this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
+        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
-        return new PasswordEncoder() {
-            @Override
-            public String encode(CharSequence rawPassword) {
-                return passwordEncoderPort.encode(rawPassword);
-            }
-
-            @Override
-            public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                return passwordEncoderPort.matches(rawPassword, encodedPassword);
-            }
-        };
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        return new TokenAuthenticationFilter();
     }
 
     @Bean
-    DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
 
-    @Bean(BeanIds.AUTHENTICATION_MANAGER)
-    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            TokenAuthenticationFilter tokenAuthenticationFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.configure(http))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .httpBasic(basic -> basic.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new RestAuthenticationEntryPoint()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/", "/error", "/favicon.ico", "/**/*.png", "/**/*.gif", "/**/*.svg",
-                                "/**/*.jpg", "/**/*.html", "/**/*.css", "/**/*.js",
-                                "/auth/**", "/oauth2/**",
-                                "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                        .requestMatchers("/", "/error", "/favicon.ico", "/**/*.png", "/**/*.gif", "/**/*.svg",
+                                "/**/*.jpg", "/**/*.html", "/**/*.css", "/**/*.js", "/v3/api-docs/**", "/swagger-ui/**",
+                                "/swagger-ui.html")
                         .permitAll()
+                        .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(ae -> ae
+                        .authorizationEndpoint(authEndpoint -> authEndpoint
                                 .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository))
-                        .redirectionEndpoint(re -> re.baseUri("/oauth2/callback/*"))
-                        .userInfoEndpoint(ui -> ui.userService(customOAuth2UserService))
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository()))
+                        .redirectionEndpoint(redirEndpoint -> redirEndpoint
+                                .baseUri("/oauth2/callback/*"))
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler));
 
-        http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
 }
