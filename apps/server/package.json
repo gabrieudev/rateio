@@ -1,8 +1,8 @@
 {
   "name": "server",
   "scripts": {
-    "dev": "SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run",
-    "build": "SPRING_PROFILES_ACTIVE=dev ./mvnw clean install -DskipTests",
+    "dev": "cross-env SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run",
+    "build": "cross-env SPRING_PROFILES_ACTIVE=dev ./mvnw clean install -DskipTests",
     "start": "java -jar target/*.jar"
   }
 }
