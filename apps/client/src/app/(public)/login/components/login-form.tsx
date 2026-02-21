@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "@/app/providers/auth-context";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
+import { useAuth } from "@/providers/auth-context";
 
 const formSchema = z.object({
   email: z.email("Invalid email address"),

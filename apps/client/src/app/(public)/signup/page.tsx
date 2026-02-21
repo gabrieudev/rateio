@@ -1,22 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import Link from "next/link";
-import { useAuth } from "../providers/auth-context";
 import SocialLogin from "@/components/social-login";
+import Link from "next/link";
 import SignupForm from "./components/signup-form";
 
 export default function SignupPage() {
-  const { authenticated } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (authenticated) {
-      router.push("/");
-    }
-  }, [authenticated, router]);
-
   return (
     <div className="signup-container text-center">
       <div className="signup-content bg-white shadow-lg rounded-lg w-[500px] inline-block mt-[30px] p-[35px]">

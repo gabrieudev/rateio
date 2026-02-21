@@ -1,13 +1,13 @@
 "use client";
+export const dynamic = "force-dynamic";
 
-import { useAuth } from "@/app/providers/auth-context";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-
-export default function OAuth2Redirect() {
-  const router = useRouter();
+import { useAuth } from "@/providers/auth-context";
+export default function OAuth2RedirectPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { login } = useAuth();
 
   useEffect(() => {
@@ -16,14 +16,14 @@ export default function OAuth2Redirect() {
 
     if (token) {
       login(token);
-      router.push("/profile");
+      router.replace("/profile");
     } else if (error) {
       toast.error(error);
-      router.push("/login");
+      router.replace("/login");
     } else {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [searchParams, router, login]);
 
-  return <div>Redirecting...</div>;
+  return <div>Redirecionando...</div>;
 }
