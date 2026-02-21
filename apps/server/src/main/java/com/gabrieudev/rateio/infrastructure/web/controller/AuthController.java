@@ -33,7 +33,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/auth")
 @Tag(name = "Autenticação", description = "Endpoints de autenticação e registro de usuários")
 public class AuthController {
-    @Value("${CORS_ORIGINS}")
+    @Value("${CORS_ORIGINS:http://localhost:3000,http://localhost:8080}")
     private String corsOrigins;
 
     private final VerifyEmailUseCase verifyEmailUseCase;
