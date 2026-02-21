@@ -2,28 +2,32 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ACCESS_TOKEN } from "@/lib/constants";
+import { useAuth } from "@/providers/auth-context";
 
 export default function OAuthRedirectClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get("token");
     const error = searchParams.get("error");
 
     if (token) {
-      try {
-        localStorage.setItem(ACCESS_TOKEN, token);
-      } catch {}
-      router.replace("/profile");
+      (async () => {
+        const u = await login(token);
+        if (u) router.replace("/profile");
+        else {
+          router.replace("/login");
+        }
+      })();
     } else if (error) {
       import("sonner").then((mod) => mod.toast.error(error));
       router.replace("/login");
     } else {
       router.replace("/login");
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, login]);
 
   return <div>Redirecionando...</div>;
 }

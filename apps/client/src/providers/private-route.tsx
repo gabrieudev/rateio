@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
-import { toast } from "sonner";
 import { useAuth } from "./auth-context";
 
 interface Props {
@@ -15,12 +14,11 @@ export const PrivateRouteProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!loading && !user) {
-      toast.error("Você precisa estar logado para acessar esta página.");
       router.replace("/login");
     }
   }, [user, loading, router]);
 
-  if (loading || !user) return <div>Carregando...</div>;
+  if (loading) return <div>Carregando...</div>;
 
   return <>{children}</>;
 };

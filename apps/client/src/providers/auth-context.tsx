@@ -4,6 +4,7 @@ import axiosInstance from "@/lib/axios";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -13,7 +14,7 @@ import { ACCESS_TOKEN } from "../lib/constants";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string) => void;
+  login: (token: string) => Promise<User | null>;
   logout: () => void;
 }
 
@@ -33,39 +34,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    console.log("AuthProvider mounted");
+  }, []);
 
+  useEffect(() => {
     const loadUser = async () => {
+      if (typeof window === "undefined") return setLoading(false);
+
       const token = localStorage.getItem(ACCESS_TOKEN);
       if (!token) {
         setLoading(false);
         return;
       }
 
+      setLoading(true);
       const currentUser = await getCurrentUser();
       if (currentUser) setUser(currentUser);
       else localStorage.removeItem(ACCESS_TOKEN);
-
       setLoading(false);
     };
+
     loadUser();
   }, []);
 
-  const login = (token: string) => {
-    if (typeof window === "undefined") return;
-
+  const login = useCallback(async (token: string): Promise<User | null> => {
+    if (typeof window === "undefined") return null;
     localStorage.setItem(ACCESS_TOKEN, token);
-    getCurrentUser().then((u) => {
-      if (u) setUser(u);
-    });
-  };
+    setLoading(true);
+    try {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        return currentUser;
+      } else {
+        localStorage.removeItem(ACCESS_TOKEN);
+        setUser(null);
+        return null;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     if (typeof window === "undefined") return;
-
     localStorage.removeItem(ACCESS_TOKEN);
     setUser(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
