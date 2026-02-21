@@ -12,4 +12,6 @@ public interface UserRepositoryPort {
     User save(User user);
 
     boolean existsByEmail(String email);
+
+    Optional<User> findByEmailVerificationToken(String token);
 }

@@ -1,5 +1,8 @@
 package com.gabrieudev.rateio.application.usecase;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 import com.gabrieudev.rateio.application.dto.SignUpRequest;
@@ -14,6 +17,7 @@ public class SignUpUseCase {
 
     private final UserRepositoryPort userRepository;
     private final PasswordEncoderPort passwordEncoder;
+    private static final long TOKEN_EXPIRATION_HOURS = 24;
 
     public SignUpUseCase(UserRepositoryPort userRepository, PasswordEncoderPort passwordEncoder) {
         this.userRepository = userRepository;
@@ -30,6 +34,10 @@ public class SignUpUseCase {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider(AuthProvider.local);
+
+        String token = UUID.randomUUID().toString();
+        user.setEmailVerificationToken(token);
+        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusHours(TOKEN_EXPIRATION_HOURS));
 
         return userRepository.save(user);
     }

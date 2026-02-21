@@ -1,5 +1,7 @@
 package com.gabrieudev.rateio.domain.model;
 
+import java.time.LocalDateTime;
+
 public class User {
     private Long id;
     private String name;
@@ -9,6 +11,8 @@ public class User {
     private String password;
     private AuthProvider provider;
     private String providerId;
+    private String emailVerificationToken;
+    private LocalDateTime emailVerificationTokenExpiry;
 
     public void setId(Long id) {
         this.id = id;
@@ -74,8 +78,25 @@ public class User {
         return id;
     }
 
+    public String getEmailVerificationToken() {
+        return emailVerificationToken;
+    }
+
+    public void setEmailVerificationToken(String emailVerificationToken) {
+        this.emailVerificationToken = emailVerificationToken;
+    }
+
+    public LocalDateTime getEmailVerificationTokenExpiry() {
+        return emailVerificationTokenExpiry;
+    }
+
+    public void setEmailVerificationTokenExpiry(LocalDateTime emailVerificationTokenExpiry) {
+        this.emailVerificationTokenExpiry = emailVerificationTokenExpiry;
+    }
+
     public User(Long id, String name, String email, String imageUrl, Boolean emailVerified, String password,
-            AuthProvider provider, String providerId) {
+            AuthProvider provider, String providerId, String emailVerificationToken,
+            LocalDateTime emailVerificationTokenExpiry) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -84,6 +105,8 @@ public class User {
         this.password = password;
         this.provider = provider;
         this.providerId = providerId;
+        this.emailVerificationToken = emailVerificationToken;
+        this.emailVerificationTokenExpiry = emailVerificationTokenExpiry;
     }
 
     public User() {

@@ -42,4 +42,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public boolean existsByEmail(String email) {
         return jpaRepository.existsByEmail(email);
     }
+
+    @Override
+    public Optional<User> findByEmailVerificationToken(String token) {
+        return jpaRepository.findByEmailVerificationToken(token).map(mapper::toDomain);
+    }
 }

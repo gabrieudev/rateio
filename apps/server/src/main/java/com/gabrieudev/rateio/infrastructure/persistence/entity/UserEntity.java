@@ -1,5 +1,7 @@
 package com.gabrieudev.rateio.infrastructure.persistence.entity;
 
+import java.time.LocalDateTime;
+
 import com.gabrieudev.rateio.domain.model.AuthProvider;
 
 import jakarta.persistence.Column;
@@ -46,4 +48,9 @@ public class UserEntity {
     private AuthProvider provider;
 
     private String providerId;
+
+    @Column(length = 36)
+    private String emailVerificationToken;
+
+    private LocalDateTime emailVerificationTokenExpiry;
 }

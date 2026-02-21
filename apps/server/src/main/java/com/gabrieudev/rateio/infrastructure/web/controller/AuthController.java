@@ -1,6 +1,7 @@
 package com.gabrieudev.rateio.infrastructure.web.controller;
 
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -9,8 +10,10 @@ import com.gabrieudev.rateio.application.dto.ApiResponse;
 import com.gabrieudev.rateio.application.dto.AuthResponse;
 import com.gabrieudev.rateio.application.dto.LoginRequest;
 import com.gabrieudev.rateio.application.dto.SignUpRequest;
+import com.gabrieudev.rateio.application.dto.SignUpResponse;
 import com.gabrieudev.rateio.application.usecase.LoginUseCase;
 import com.gabrieudev.rateio.application.usecase.SignUpUseCase;
+import com.gabrieudev.rateio.application.usecase.VerifyEmailUseCase;
 import com.gabrieudev.rateio.domain.model.User;
 import com.gabrieudev.rateio.infrastructure.security.TokenProvider;
 
@@ -25,14 +28,18 @@ import java.net.URI;
 @Tag(name = "Autenticação", description = "Endpoints de autenticação e registro de usuários")
 public class AuthController {
 
+    private final VerifyEmailUseCase verifyEmailUseCase;
+
     private final SignUpUseCase signUpUseCase;
     private final LoginUseCase loginUseCase;
     private final TokenProvider tokenProvider;
 
-    public AuthController(SignUpUseCase signUpUseCase, LoginUseCase loginUseCase, TokenProvider tokenProvider) {
+    public AuthController(SignUpUseCase signUpUseCase, LoginUseCase loginUseCase, TokenProvider tokenProvider,
+            VerifyEmailUseCase verifyEmailUseCase) {
         this.signUpUseCase = signUpUseCase;
         this.loginUseCase = loginUseCase;
         this.tokenProvider = tokenProvider;
+        this.verifyEmailUseCase = verifyEmailUseCase;
     }
 
     @Operation(summary = "Autenticar usuário", description = "Realiza autenticação do usuário e retorna um token JWT")
@@ -54,12 +61,27 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<SignUpResponse> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         User user = signUpUseCase.execute(signUpRequest);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath().path("/user/me")
                 .buildAndExpand(user.getId()).toUri();
-        return ResponseEntity.created(location)
-                .body(new ApiResponse(true, "User registered successfully"));
+
+        SignUpResponse response = new SignUpResponse(
+                true,
+                "Usuário registrado com sucesso. Por favor, verifique seu email para ativar sua conta.",
+                user.getEmailVerificationToken());
+        return ResponseEntity.created(location).body(response);
+    }
+
+    @Operation(summary = "Verificar email", description = "Verifica o email do usuário")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Email verificado com sucesso"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
+    })
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse> verifyEmail(@RequestParam String token) {
+        verifyEmailUseCase.execute(token);
+        return ResponseEntity.ok(new ApiResponse(true, "Email verificado com sucesso."));
     }
 }
