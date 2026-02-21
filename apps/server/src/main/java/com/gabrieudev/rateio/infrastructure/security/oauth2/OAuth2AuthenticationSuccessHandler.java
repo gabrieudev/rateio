@@ -41,7 +41,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String targetUrl = determineTargetUrl(request, response, authentication);
 
         if (response.isCommitted()) {
-            logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
+            logger.debug("Resposta já foi comprometida. Não é possível redirecionar para " + targetUrl);
             return;
         }
 
@@ -56,7 +56,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         if (redirectUri.isPresent() && !isAuthorizedRedirectUri(redirectUri.get())) {
             throw new BadRequestException(
-                    "Sorry! We've got an Unauthorized Redirect URI and can't proceed with the authentication");
+                    "Desculpe! Temos uma URI de redirecionamento não autorizada e não podemos prosseguir com a autenticação");
         }
 
         String targetUrl = redirectUri.orElse(getDefaultTargetUrl());

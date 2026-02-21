@@ -29,9 +29,6 @@ public class AuthenticationAdapter implements AuthenticationPort {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password));
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        // Podemos buscar o usuário completo do repositório, mas o principal já tem os
-        // dados básicos
-        // Para manter consistência, buscamos novamente pelo ID.
         return userMapper.toDomain((UserResponse) userDetailsService.loadUserById(principal.getId()));
     }
 }

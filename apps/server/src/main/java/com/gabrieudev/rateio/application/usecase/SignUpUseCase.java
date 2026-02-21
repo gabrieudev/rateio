@@ -22,7 +22,7 @@ public class SignUpUseCase {
 
     public User execute(SignUpRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email address already in use.");
+            throw new BadRequestException("Email já está em uso.");
         }
 
         User user = new User();

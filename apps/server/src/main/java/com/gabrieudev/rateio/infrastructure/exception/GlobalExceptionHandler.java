@@ -34,6 +34,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse(false, "An unexpected error occurred"));
+                .body(new ApiResponse(false, "Erro interno do servidor: " + ex.getMessage()));
     }
 }
