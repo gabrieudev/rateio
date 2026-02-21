@@ -18,14 +18,14 @@ export default function OAuthRedirectClient() {
         const u = await login(token);
         if (u) router.replace("/profile");
         else {
-          router.replace("/login");
+          router.replace("/auth/login");
         }
       })();
     } else if (error) {
       import("sonner").then((mod) => mod.toast.error(error));
-      router.replace("/login");
+      router.replace("/auth/login");
     } else {
-      router.replace("/login");
+      router.replace("/auth/login");
     }
   }, [searchParams, router, login]);
 

@@ -14,7 +14,7 @@ export const PrivateRouteProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/auth/login");
     }
   }, [user, loading, router]);
 

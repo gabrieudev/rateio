@@ -17,17 +17,34 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignupForm() {
   const router = useRouter();
+
+  const sendVerificationEmail = async (
+    name: string,
+    email: string,
+    token: string,
+  ) => {
+    await axios.post("/api/send-email", {
+      to: email,
+      subject: "Confirmação de Email",
+      template: "confirmEmail",
+      data: {
+        name: name,
+        link: `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-email?token=${token}&callbackUrl=${encodeURIComponent(`${window.location.origin}/auth/login`)}`,
+      },
+    });
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -36,16 +53,19 @@ export default function SignupForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await axiosInstance.post("/auth/signup", data);
-      toast.success(
-        "Você se registrou com sucesso! Por favor, faça login para continuar.",
+      const resp = await axiosInstance.post("/auth/signup", data);
+      toast.success("Conta criada! Por favor, verifique seu email.");
+      router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+      await sendVerificationEmail(
+        data.name,
+        data.email,
+        resp.data.emailVerificationToken,
       );
-      router.push("/login");
     } catch (error: unknown) {
-      let message = "Oops! Algo deu errado. Por favor, tente novamente!";
+      let message = "Algo deu errado. Por favor, tente novamente.";
 
       if (axios.isAxiosError(error)) {
-        message = error.response?.data?.message || error.message || message;
+        message = error.response?.data?.message || error.message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -62,9 +82,9 @@ export default function SignupForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Nome</FormLabel>
               <FormControl>
-                <Input placeholder="Name" {...field} />
+                <Input placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,7 +97,11 @@ export default function SignupForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
+                <Input
+                  placeholder="exemplo@exemplo.com"
+                  type="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -88,17 +112,19 @@ export default function SignupForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input placeholder="Password" type="password" {...field} />
+                <Input placeholder="••••••" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          Sign Up
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button type="submit" className="w-full">
+            Criar Conta
+          </Button>
+        </motion.div>
       </form>
     </Form>
   );

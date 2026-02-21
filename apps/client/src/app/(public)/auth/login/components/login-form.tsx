@@ -18,10 +18,11 @@ import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import { useAuth } from "@/providers/auth-context";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -30,14 +31,6 @@ export default function LoginForm() {
   const { login: authLogin } = useAuth();
   const router = useRouter();
 
-  const login = async (loginRequest: LoginRequest): Promise<AuthResponse> => {
-    const response = await axiosInstance.post<AuthResponse>(
-      "/auth/login",
-      loginRequest,
-    );
-    return response.data;
-  };
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", password: "" },
@@ -45,14 +38,14 @@ export default function LoginForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const response = await login(data);
-      authLogin(response.accessToken);
+      const response = await axiosInstance.post("/auth/login", data);
+      authLogin(response.data.accessToken);
       router.push("/");
     } catch (error: unknown) {
-      let message = "Oops! Algo deu errado. Por favor, tente novamente!";
+      let message = "Algo deu errado. Por favor, tente novamente.";
 
       if (axios.isAxiosError(error)) {
-        message = error.response?.data?.message || error.message || message;
+        message = error.response?.data?.message || error.message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -71,7 +64,11 @@ export default function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
+                <Input
+                  placeholder="exemplo@exemplo.com"
+                  type="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -82,17 +79,19 @@ export default function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input placeholder="Password" type="password" {...field} />
+                <Input placeholder="••••••" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button type="submit" className="w-full">
+            Fazer Login
+          </Button>
+        </motion.div>
       </form>
     </Form>
   );

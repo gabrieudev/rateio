@@ -44,9 +44,9 @@ export default function Header() {
                 <>
                   <li>
                     <Link
-                      href="/login"
+                      href="/auth/login"
                       className={`px-4 py-2 rounded-md transition-colors ${
-                        pathname === "/login"
+                        pathname === "/auth/login"
                           ? "text-blue-500"
                           : "text-gray-700 hover:text-blue-500"
                       }`}
@@ -56,9 +56,9 @@ export default function Header() {
                   </li>
                   <li>
                     <Link
-                      href="/signup"
+                      href="/auth/signup"
                       className={`px-4 py-2 rounded-md transition-colors ${
-                        pathname === "/signup"
+                        pathname === "/auth/signup"
                           ? "text-blue-500"
                           : "text-gray-700 hover:text-blue-500"
                       }`}
