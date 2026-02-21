@@ -5,11 +5,19 @@ import org.mapstruct.Mapping;
 
 import com.gabrieudev.rateio.application.dto.UserResponse;
 import com.gabrieudev.rateio.domain.model.User;
+import com.gabrieudev.rateio.infrastructure.persistence.entity.UserEntity;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     UserResponse toResponse(User user);
 
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "emailVerificationToken", ignore = true)
+    @Mapping(target = "emailVerificationTokenExpiry", ignore = true)
     User toDomain(UserResponse userResponse);
+
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "emailVerificationToken", ignore = true)
+    @Mapping(target = "emailVerificationTokenExpiry", ignore = true)
+    User toDomain(UserEntity userEntity);
 }

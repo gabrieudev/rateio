@@ -3,24 +3,26 @@ package com.gabrieudev.rateio.infrastructure.security;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import com.gabrieudev.rateio.application.mapper.UserMapper;
 import com.gabrieudev.rateio.domain.model.User;
 import com.gabrieudev.rateio.domain.port.AuthenticationPort;
-import com.gabrieudev.rateio.application.dto.UserResponse;
+import com.gabrieudev.rateio.infrastructure.persistence.entity.UserEntity;
+import com.gabrieudev.rateio.infrastructure.persistence.repository.UserJpaRepository;
 
 @Component
 public class AuthenticationAdapter implements AuthenticationPort {
 
     private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
     private final UserMapper userMapper;
+    private final UserJpaRepository userRepository;
 
     public AuthenticationAdapter(AuthenticationManager authenticationManager,
-            CustomUserDetailsService userDetailsService, UserMapper userMapper) {
+            UserJpaRepository userRepository, UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
 
@@ -28,7 +30,12 @@ public class AuthenticationAdapter implements AuthenticationPort {
     public User authenticate(String email, String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password));
+
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        return userMapper.toDomain((UserResponse) userDetailsService.loadUserById(principal.getId()));
+
+        UserEntity entity = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+
+        return userMapper.toDomain(entity);
     }
 }
