@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ACCESS_TOKEN } from "@/lib/constants";
 
 export default function OAuthRedirectClient() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function OAuthRedirectClient() {
 
     if (token) {
       try {
-        localStorage.setItem("ACCESS_TOKEN", token);
+        localStorage.setItem(ACCESS_TOKEN, token);
       } catch {}
       router.replace("/profile");
     } else if (error) {
