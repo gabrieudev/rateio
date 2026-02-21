@@ -1,12 +1,18 @@
 package com.gabrieudev.rateio.infrastructure.web.controller;
 
-import jakarta.validation.Valid;
+import java.io.IOException;
+import java.net.URI;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.gabrieudev.rateio.application.dto.ApiResponse;
 import com.gabrieudev.rateio.application.dto.AuthResponse;
 import com.gabrieudev.rateio.application.dto.LoginRequest;
 import com.gabrieudev.rateio.application.dto.SignUpRequest;
@@ -18,15 +24,17 @@ import com.gabrieudev.rateio.domain.model.User;
 import com.gabrieudev.rateio.infrastructure.security.TokenProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
-import java.net.URI;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Autenticação", description = "Endpoints de autenticação e registro de usuários")
 public class AuthController {
+    @Value("${CORS_ORIGINS}")
+    private String corsOrigins;
 
     private final VerifyEmailUseCase verifyEmailUseCase;
 
@@ -74,14 +82,35 @@ public class AuthController {
         return ResponseEntity.created(location).body(response);
     }
 
-    @Operation(summary = "Verificar email", description = "Verifica o email do usuário")
+    @Operation(summary = "Verificar email", description = "Verifica o email do usuário e redireciona para callbackUrl se informado")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Email verificado com sucesso"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
     })
-    @PostMapping("/verify-email")
-    public ResponseEntity<ApiResponse> verifyEmail(@RequestParam String token) {
+    @GetMapping("/verify-email")
+    public void verifyEmail(
+            @RequestParam String token,
+            @RequestParam(required = false) String callbackUrl,
+            HttpServletResponse response) throws IOException {
+
         verifyEmailUseCase.execute(token);
-        return ResponseEntity.ok(new ApiResponse(true, "Email verificado com sucesso."));
+
+        if (callbackUrl != null && !callbackUrl.isBlank()) {
+
+            try {
+                URI callbackUri = new URI(callbackUrl);
+                String origin = callbackUri.getScheme() + "://" + callbackUri.getHost();
+                if (corsOrigins.contains(origin)) {
+                    response.sendRedirect(callbackUrl);
+                    return;
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json");
+        response.getWriter().write(
+                "{\"success\":true,\"message\":\"Email verificado com sucesso.\"}");
     }
 }
