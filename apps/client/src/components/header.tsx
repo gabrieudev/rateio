@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/app/providers/auth-context";
+import { useAuth } from "@/providers/auth-context";
 
 export default function Header() {
-  const { authenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
 
   return (
-    <header className="app-header h-[60px] relative z-10 border-b">
+    <header className="app-header h-15 relative z-10 border-b">
       <div className="container mx-auto flex items-center justify-between h-full">
         <div className="app-branding">
           <Link href="/" className="app-title text-lg font-medium">
@@ -20,7 +20,7 @@ export default function Header() {
         <div className="app-options">
           <nav className="app-nav">
             <ul className="flex space-x-1">
-              {authenticated ? (
+              {user ? (
                 <>
                   <li>
                     <Link
