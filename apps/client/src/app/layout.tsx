@@ -1,9 +1,9 @@
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/providers/auth-context";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { Toaster } from "sonner";
-import Header from "@/components/header";
-import { AuthProvider } from "@/providers/auth-context";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Rateio",
@@ -18,12 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
         <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <Toaster richColors position="top-right" />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main>{children}</main>
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

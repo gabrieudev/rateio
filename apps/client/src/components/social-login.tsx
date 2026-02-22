@@ -16,7 +16,10 @@ export default function SocialLogin({ method }: SocialLoginProps) {
         whileTap={{ scale: 0.98 }}
         className="block"
       >
-        <Button variant="outline" className="w-full flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="w-full flex items-center gap-2 cursor-pointer"
+        >
           <FaGoogle />
           {method === "signup"
             ? "Cadastrar-se com Google"
@@ -29,7 +32,10 @@ export default function SocialLogin({ method }: SocialLoginProps) {
         whileTap={{ scale: 0.98 }}
         className="block"
       >
-        <Button variant="outline" className="w-full flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="w-full flex items-center gap-2 cursor-pointer"
+        >
           <FaGithub />
           {method === "signup"
             ? "Cadastrar-se com Github"

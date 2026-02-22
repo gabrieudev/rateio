@@ -26,7 +26,7 @@ export const ConfirmEmail = ({ name, link }: ConfirmEmailProps) => {
         <Container style={container}>
           <Section style={logoSection}>
             <Img
-              src="https://via.placeholder.com/150x50/5469d4/ffffff?text=Logo"
+              src={`${process.env.NEXT_PUBLIC_BASE_URL}/logo.png`}
               width="150"
               height="50"
               alt="Logo"

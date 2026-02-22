@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,50 +18,34 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
+import { useAuth } from "@/providers/auth-context";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function SignupForm() {
+export default function LoginForm() {
+  const { login: authLogin } = useAuth();
   const router = useRouter();
-
-  const sendVerificationEmail = async (
-    name: string,
-    email: string,
-    token: string,
-  ) => {
-    await axios.post("/api/send-email", {
-      to: email,
-      subject: "Confirmação de Email",
-      template: "confirmEmail",
-      data: {
-        name: name,
-        link: `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-email?token=${token}&callbackUrl=${encodeURIComponent(`${window.location.origin}/auth/login`)}`,
-      },
-    });
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (data: FormValues) => {
+    setLoading(true);
     try {
-      const resp = await axiosInstance.post("/auth/signup", data);
-      toast.success("Conta criada! Por favor, verifique seu email.");
-      router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
-      await sendVerificationEmail(
-        data.name,
-        data.email,
-        resp.data.emailVerificationToken,
-      );
+      const response = await axiosInstance.post("/auth/login", data);
+      authLogin(response.data.accessToken);
+      router.push("/");
     } catch (error: unknown) {
       let message = "Algo deu errado. Por favor, tente novamente.";
 
@@ -71,25 +56,18 @@ export default function SignupForm() {
       }
 
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="email"
@@ -100,6 +78,7 @@ export default function SignupForm() {
                 <Input
                   placeholder="exemplo@exemplo.com"
                   type="email"
+                  autoComplete="email"
                   {...field}
                 />
               </FormControl>
@@ -114,15 +93,41 @@ export default function SignupForm() {
             <FormItem>
               <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input placeholder="••••••" type="password" {...field} />
+                <div className="relative">
+                  <Input
+                    placeholder="••••••"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    className="pr-10"
+                    {...field}
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={
+                      showPassword ? "Esconder senha" : "Mostrar senha"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button type="submit" className="w-full">
-            Criar Conta
+          <Button
+            disabled={loading}
+            type="submit"
+            className="w-full cursor-pointer"
+          >
+            Fazer Login
           </Button>
         </motion.div>
       </form>
