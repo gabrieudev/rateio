@@ -14,7 +14,7 @@ export const PublicRouteProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/profile");
+      router.replace("/dashboard");
     }
   }, [user, loading, router]);
 

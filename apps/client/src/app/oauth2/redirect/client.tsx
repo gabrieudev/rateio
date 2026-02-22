@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/providers/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function OAuthRedirectClient() {
   const router = useRouter();
@@ -16,18 +17,21 @@ export default function OAuthRedirectClient() {
     if (token) {
       (async () => {
         const u = await login(token);
-        if (u) router.replace("/profile");
+        if (u) router.replace("/dashboard");
         else {
           router.replace("/auth/login");
         }
       })();
     } else if (error) {
-      import("sonner").then((mod) => mod.toast.error(error));
       router.replace("/auth/login");
     } else {
       router.replace("/auth/login");
     }
   }, [searchParams, router, login]);
 
-  return <div>Redirecionando...</div>;
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <Skeleton className="h-80 w-80" />
+    </div>
+  );
 }

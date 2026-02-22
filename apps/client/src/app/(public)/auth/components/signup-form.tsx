@@ -95,7 +95,7 @@ export default function SignupForm() {
             <FormItem>
               <FormLabel>Nome</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" autoComplete="name" {...field} />
+                <Input placeholder="Nome" autoComplete="name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
