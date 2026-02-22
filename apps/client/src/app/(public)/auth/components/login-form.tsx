@@ -1,3 +1,4 @@
+// app/auth/login/components/login-form.tsx
 "use client";
 
 import { useState } from "react";
@@ -23,7 +24,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
-  email: z.email("Email inválido"),
+  email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
@@ -127,7 +128,7 @@ export default function LoginForm() {
             type="submit"
             className="w-full cursor-pointer"
           >
-            Fazer Login
+            {loading ? "Entrando..." : "Fazer Login"}
           </Button>
         </motion.div>
       </form>

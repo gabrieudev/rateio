@@ -1,3 +1,4 @@
+// app/auth/signup/components/signup-form.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
@@ -23,32 +23,19 @@ import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido"),
+  email: z.email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
+interface SignupFormProps {
+  onSuccess: (name: string, email: string, token: string) => void;
+}
+
 type FormValues = z.infer<typeof formSchema>;
 
-export default function SignupForm() {
-  const router = useRouter();
+export default function SignupForm({ onSuccess }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const sendVerificationEmail = async (
-    name: string,
-    email: string,
-    token: string,
-  ) => {
-    await axios.post("/api/send-email", {
-      to: email,
-      subject: "Confirmação de Email",
-      template: "confirmEmail",
-      data: {
-        name: name,
-        link: `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-email?token=${token}&callbackUrl=${encodeURIComponent(`${window.location.origin}/auth/login`)}`,
-      },
-    });
-  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,12 +47,7 @@ export default function SignupForm() {
     try {
       const resp = await axiosInstance.post("/auth/signup", data);
       toast.success("Conta criada! Por favor, verifique seu email.");
-      router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
-      await sendVerificationEmail(
-        data.name,
-        data.email,
-        resp.data.emailVerificationToken,
-      );
+      onSuccess(data.name, data.email, resp.data.emailVerificationToken);
     } catch (error: unknown) {
       let message = "Algo deu errado. Por favor, tente novamente.";
 
@@ -160,7 +142,7 @@ export default function SignupForm() {
             type="submit"
             className="w-full cursor-pointer"
           >
-            Criar Conta
+            {loading ? "Criando conta..." : "Criar Conta"}
           </Button>
         </motion.div>
       </form>
